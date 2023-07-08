@@ -7,9 +7,9 @@ import sys
 sys.path.append("./")
 from main.model.BSM import *
 
-strike_price = 455
-ticker = "SPY"
-expiry = "23-07-2023"
+strike_price = 100
+ticker = "AAPL"
+expiry = "24-06-2024"
 start_date = datetime.now() - timedelta(days=365)
 end_date = datetime.now()
 today = datetime.now()
@@ -33,4 +33,4 @@ risk_free_rate = dfTreasury.iloc[-1]["Close"] / 100
 t = (datetime.strptime(expiry, "%d-%m-%Y") - datetime.utcnow()).days / 365
 last_closing_price = df.iloc[-1]["Close"]
 
-print('The Option Price is: ', black_scholes_call(strike_price, last_closing_price, risk_free_rate, t, sigma))
+print('The Option Price is: ', black_scholes_call(last_closing_price, strike_price, risk_free_rate, t, sigma))
