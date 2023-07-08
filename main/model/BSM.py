@@ -8,3 +8,6 @@ def black_scholes_call(S, K, r, T, sigma):
     N_d2 = norm.cdf(d2)
     call_price = S * N_d1 - K * np.exp(-r * T) * N_d2
     return call_price
+
+def test_func():
+    return 1
