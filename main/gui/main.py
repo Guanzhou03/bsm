@@ -1,14 +1,10 @@
-from datetime import datetime, timedelta
 import tkinter as tk
-import numpy as np
-import pandas as pd
-import pandas_datareader.data as web
-import yfinance as yf
+import time
 import sys
 sys.path.append("./")
-from main.model.BSM import *
+from main.model.BSM import bjerksund_stensland
+import yfinance as yf
 import datetime as dt
-import time
 
 buy_threshold = 0.9
 sell_threshold = 1.1
@@ -81,32 +77,3 @@ button.pack()
 
 # Start the GUI event loop
 root.mainloop()
-# strike_price = 100
-# ticker = "AAPL"
-# expiry = "21-06-2024"
-# start_date = datetime.now() - timedelta(days=365)
-# end_date = datetime.now()
-# today = datetime.now()
-
-# # Retrieve the historical stock price data using yfinance
-# df = yf.download(ticker, start=start_date, end=end_date)
-
-# df = df.sort_values(by="Date")
-# df = df.dropna()
-# df = df.assign(close_day_before=df.Close.shift(1))
-# df['returns'] = ((df.Close - df.close_day_before)/df.close_day_before)
-
-# sigma = np.sqrt(252) * df['returns'].std()
-# treasury_ticker = "^TNX"
-
-# # Retrieve the historical data for the 10-year US Treasury bond
-# dfTreasury = yf.download(treasury_ticker, period="1y")
-
-# # Get the most recent yield value
-# risk_free_rate = dfTreasury.iloc[-1]["Close"] / 100
-# t = (datetime.strptime(expiry, "%d-%m-%Y") - datetime.utcnow()).days / 365
-# last_closing_price = df.iloc[-1]["Close"]
-
-# continuous_dividend_yield = -0.116
-# print('The Option Price is: ', black_scholes_call(last_closing_price, strike_price, risk_free_rate, t, sigma))
-# print('Using new model price is: ', bjerksund_stensland(last_closing_price, strike_price, risk_free_rate, continuous_dividend_yield, t, sigma))
