@@ -1,14 +1,12 @@
-from datetime import datetime, timedelta
 import tkinter as tk
-import numpy as np
-import pandas as pd
-import pandas_datareader.data as web
-import yfinance as yf
-import sys
-sys.path.append("./")
-from main.model.BSM import *
-import datetime as dt
 import time
+import pandas as pd
+import sys
+import threading
+sys.path.append("./")
+from main.model.bjs import bjerksund_stensland
+import yfinance as yf
+import datetime as dt
 
 buy_threshold = 0.9
 sell_threshold = 1.1
@@ -30,6 +28,8 @@ time_to_expiry = (expiry_date - today).days / 365
 
 # Retrieve the last price for the selected option
 last_price = option["lastPrice"].iloc[-1]
+last_trade_date = option["lastTradeDate"].iloc[-1]
+
 # print(f"Last price for AAPL {time_to_expiry:.2f}-year {option.option_type.iloc[0].lower()} option with strike {option.strike.iloc[0]}: {last_price}")
 def check_market():
     aapl = yf.Ticker("AAPL")
@@ -37,7 +37,7 @@ def check_market():
     strike_price = 150.0
     risk_free_rate = 0.015
     dividend_yield = -0.0116
-    time_to_maturity = 0.25
+    time_to_maturity = time_to_expiry
     volatility = 0.25
     
     theoretical_value = bjerksund_stensland(stock_price, strike_price, risk_free_rate, dividend_yield, time_to_maturity, volatility)
@@ -51,20 +51,26 @@ def check_market():
     else:
         signal = None
         
-    return signal
+    return signal, theoretical_value, last_price, last_trade_date
 
 # Define the function to run the trading bot
 def run_bot():
     # Replace this code with actual trading bot code
     print("Trading bot is running...")
     while True:
-        signal = check_market()
+        signal, theoretical_value, last_price, last_trade_date = check_market()
         if signal is not None:
+            print("Theoretical value is: ", theoretical_value)
+            print("Last traded price is: ", last_price, " at time", last_trade_date)
             print("Signal generated:", signal)
             # Replace this code with your actual trading code
             # Here, we just print the signal as an example
-        time.sleep(1)  # Wait for 1 minute before checking the market again
+        time.sleep(10)  # Wait for 1 minute before checking the market again
 
+def start_bot():
+    # TODO STUDY IMPACT OF THREADING
+    bot_thread = threading.Thread(target=start_bot)
+    bot_thread.start()
 # Create the GUI window
 root = tk.Tk()
 root.title("Trading Bot")
@@ -81,32 +87,3 @@ button.pack()
 
 # Start the GUI event loop
 root.mainloop()
-# strike_price = 100
-# ticker = "AAPL"
-# expiry = "21-06-2024"
-# start_date = datetime.now() - timedelta(days=365)
-# end_date = datetime.now()
-# today = datetime.now()
-
-# # Retrieve the historical stock price data using yfinance
-# df = yf.download(ticker, start=start_date, end=end_date)
-
-# df = df.sort_values(by="Date")
-# df = df.dropna()
-# df = df.assign(close_day_before=df.Close.shift(1))
-# df['returns'] = ((df.Close - df.close_day_before)/df.close_day_before)
-
-# sigma = np.sqrt(252) * df['returns'].std()
-# treasury_ticker = "^TNX"
-
-# # Retrieve the historical data for the 10-year US Treasury bond
-# dfTreasury = yf.download(treasury_ticker, period="1y")
-
-# # Get the most recent yield value
-# risk_free_rate = dfTreasury.iloc[-1]["Close"] / 100
-# t = (datetime.strptime(expiry, "%d-%m-%Y") - datetime.utcnow()).days / 365
-# last_closing_price = df.iloc[-1]["Close"]
-
-# continuous_dividend_yield = -0.116
-# print('The Option Price is: ', black_scholes_call(last_closing_price, strike_price, risk_free_rate, t, sigma))
-# print('Using new model price is: ', bjerksund_stensland(last_closing_price, strike_price, risk_free_rate, continuous_dividend_yield, t, sigma))
