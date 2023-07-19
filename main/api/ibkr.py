@@ -3,27 +3,39 @@ from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract
 from ibapi.order import Order
 import time
+import threading
 
 class MyWrapper(EWrapper):
-    def contractDetails(self, reqId, contractDetails):
-        super().contractDetails(reqId, contractDetails)
-        print("Contract Details for Request ID {}:".format(reqId))
-        print(contractDetails)
+    def __init__(self):
+        super().__init__()
+        self.contract_id = None
+
+    def reqContractDetails(self, reqId, contract):
+        super().reqContractDetails(reqId, contract)
+        print("Requesting contract details for {}...".format(contract.symbol))
 
     def tickPrice(self, reqId, tickType, price, attrib):
         super().tickPrice(reqId, tickType, price, attrib)
         print("Tick Price. Ticker Id:", reqId, "tickType:", tickType, "Price:", price)
 
-class MyClient(EClient):
+class IBApi(EWrapper, EClient):
     def __init__(self, wrapper):
         EClient.__init__(self, wrapper)
 
-# Define the contract for which you want option data
-order = Order()
-order.action = "BUY"
-order.totalQuantity = 1
-order.orderType = "LMT"
-order.lmtPrice = 10.0
+class Bot:
+    def __init__(self):
+        self.ib = IBApi(MyWrapper())
+        self.ib.connect("127.0.0.1", 7497, 1)
+        time.sleep(3)
+        self.ib.reqIds(-1)
+        ib_thread = threading.Thread(target= self.runLoop, daemon=True)
+        ib_thread.start()
+
+    def placeOrder(self, contract, order):
+        self.ib.placeOrder(1, contract, order)
+    
+    def runLoop(self):
+        self.ib.run()
 
 # Create a new contract object for the AAPL call option
 contract = Contract()
@@ -35,21 +47,26 @@ contract.lastTradeDateOrContractMonth = "20240621"
 contract.strike = 150
 contract.right = "C"
 
-# Create instances of the client and wrapper classes
-wrapper = MyWrapper()
-client = MyClient(wrapper)
+# Define the order for the option contract
+order = Order()
+order.action = "BUY"
+order.totalQuantity = 1
+order.orderType = "LMT"
+order.lmtPrice = 10.0
+order.eTradeOnly = False
+order.firmQuoteOnly = False
 
-# Connect to the TWS or IB Gateway application
-client.connect("127.0.0.1", 7497, 0)
-time.sleep(3)
-
+print("Creating bot...")
+client = Bot()
 # Request contract details for the option contract
-client.reqContractDetails(1, contract)
+time.sleep(3)
+client.ib.reqContractDetails(1, contract)
 
-client.reqAccountUpdates(True, "DU001") # Replace with your paper trading account number
-client.reqIds(-1)
-# Start the event loop to receive responses from the TWS API
-client.run()
-# Place the order
-client.placeOrder(1, contract, order)
-print("Client is connected:", client.isConnected())
+# Place order for the option contract
+client.placeOrder(contract, order)
+
+# Wait for the order to be filled or cancelled
+time.sleep(10)
+
+# Disconnect from the IB API
+client.ib.disconnect()
