@@ -2,6 +2,7 @@ from ibapi.client import EClient
 from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract
 from ibapi.order import Order
+from ibapi.ticktype import TickTypeEnum
 import time
 import threading
 
@@ -17,6 +18,17 @@ class MyWrapper(EWrapper):
     def tickPrice(self, reqId, tickType, price, attrib):
         super().tickPrice(reqId, tickType, price, attrib)
         print("Tick Price. Ticker Id:", reqId, "tickType:", tickType, "Price:", price)
+    
+    def tickOptionComputation(self, reqId, tickType, tickAttrib: int,
+                                   impliedVol: float, delta: float, optPrice: float, pvDividend: float,
+                                   gamma: float, vega: float, theta: float, undPrice: float):
+             super().tickOptionComputation(reqId, tickType, tickAttrib, impliedVol, delta,
+                                           optPrice, pvDividend, gamma, vega, theta, undPrice)
+             print("TickOptionComputation. TickerId:", reqId, "TickType:", tickType,
+                   "TickAttrib:", tickAttrib,
+                   "ImpliedVolatility:", impliedVol, "Delta:", delta, "OptionPrice:",
+                   optPrice, "pvDividend:", pvDividend, "Gamma: ", gamma, "Vega:", vega,
+                  "Theta:", theta, "UnderlyingPrice:", undPrice)
 
 class IBApi(EWrapper, EClient):
     def __init__(self, wrapper):
@@ -32,7 +44,7 @@ class Bot:
         ib_thread.start()
 
     def placeOrder(self, contract, order):
-        self.ib.placeOrder(1, contract, order)
+        self.ib.placeOrder(2, contract, order)
     
     def runLoop(self):
         self.ib.run()
@@ -48,20 +60,25 @@ contract.strike = 150
 contract.right = "C"
 
 # Define the order for the option contract
-order = Order()
-order.action = "BUY"
-order.totalQuantity = 1
-order.orderType = "LMT"
-order.lmtPrice = 10.0
-order.eTradeOnly = False
-order.firmQuoteOnly = False
 
+
+def create_order(action, qty, type, limit_price):
+    order = Order()
+    order.action = action
+    order.totalQuantity = qty
+    order.orderType = type
+    order.lmtPrice = limit_price
+    order.eTradeOnly = False
+    order.firmQuoteOnly = False
+    return order
+    
+order = create_order("BUY", 1, "LMT", 20)
 print("Creating bot...")
 client = Bot()
 # Request contract details for the option contract
-time.sleep(3)
-client.ib.reqContractDetails(1, contract)
-
+# client.ib.reqContractDetails(2, contract)
+# client.ib.reqMarketDataType(3)
+# client.ib.reqMktData(4, contract, "", False, False, None)
 # Place order for the option contract
 client.placeOrder(contract, order)
 
