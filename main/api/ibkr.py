@@ -48,6 +48,20 @@ class Bot:
     
     def runLoop(self):
         self.ib.run()
+    def calculate_theoretical_price(options):
+        for i, row in options.iterrows():
+        S = client.prices[i] # current market price of the underlying asset
+        K = row['strike'] # strike price
+        r = 0.02 # risk-free interest rate
+        q = 0 # dividend yield
+        T = (pd.to_datetime(row['expiration']) - pd.to_datetime(row['lastTradeDate'])).days / 365 # time to maturity
+        sigma = client.implied_volatilities[i] # implied volatility
+        is_call = row['type'] == 'call' # option type (call or put)
+        theoretical_price = bjerksund_stensland(S, K, r, q, T, sigma, is_call)
+        options.at[i, 'theoreticalPrice'] = theoretical_price
+
+        return options
+        
 
 # Create a new contract object for the AAPL call option
 contract = Contract()

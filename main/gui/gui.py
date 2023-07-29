@@ -31,8 +31,8 @@ last_price = option["lastPrice"].iloc[-1]
 last_trade_date = option["lastTradeDate"].iloc[-1]
 
 # print(f"Last price for AAPL {time_to_expiry:.2f}-year {option.option_type.iloc[0].lower()} option with strike {option.strike.iloc[0]}: {last_price}")
-def check_market():
-    aapl = yf.Ticker("AAPL")
+def check_market(ticker):
+    aapl = yf.Ticker(ticker)
     stock_price = aapl.history(period="1d")["Close"].iloc[-1]
     strike_price = 150.0
     risk_free_rate = 0.015
@@ -80,9 +80,15 @@ input_label = tk.Label(root, text="Enter the threshold value:")
 input_label.pack()
 input_text = tk.Entry(root)
 input_text.pack()
+val = input_text.get()
+
+def get_threshold_value():
+    threshold_value = input_text.get()
+    print(threshold_value)
+
 
 # Add a button to run the bot
-button = tk.Button(root, text="Run Bot", command=run_bot)
+button = tk.Button(root, text="Run Bot", command=get_threshold_value)
 button.pack()
 
 # Start the GUI event loop

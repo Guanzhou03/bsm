@@ -1,5 +1,6 @@
 from scipy.stats import norm
 import numpy as np
+from scipy.optimize import bisect
 
 def black_scholes_call(S, K, r, T, sigma):
     d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
@@ -8,9 +9,6 @@ def black_scholes_call(S, K, r, T, sigma):
     N_d2 = norm.cdf(d2)
     call_price = S * N_d1 - K * np.exp(-r * T) * N_d2
     return call_price
-
-import numpy as np
-from scipy.stats import norm
 
 def bjerksund_stensland(S, K, r, q, T, sigma, is_call=True):
     """
@@ -68,3 +66,9 @@ def bjerksund_stensland(S, K, r, q, T, sigma, is_call=True):
             return K * norm.cdf(-d2) - S * norm.cdf(-d1) + (K_star - K) * np.exp(-r * T) * norm.cdf(-h1) - \
                    (K_star - S) * np.exp(-q * T) * norm.cdf(-h2)
                    
+
+def implied_volatility_bisect(S, K, r, q, T, C, is_call=True):
+    func = lambda sigma: bjerksund_stensland(S, K, r, q, T, sigma, is_call) - C
+    implied_volatility = bisect(func, 0.01, 1)
+    return implied_volatility
+
